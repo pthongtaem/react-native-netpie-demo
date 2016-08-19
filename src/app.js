@@ -7,7 +7,7 @@ import {
   TextInput,
   Dimensions,
 } from 'react-native';
-import Button from 'react-native-button';
+import Button from 'apsl-react-native-button';
 import config from './config';
 
 const windowWidth = Dimensions.get('window').width;
@@ -94,20 +94,21 @@ class App extends Component {
               flex: 1,
               justifyContent: 'center',
               alignItems: 'center',
+              padding: 15,
             }}
           >
             <Button
-              style={styles.onbutton}
-              styleDisabled={styles.disablebutton}
-              disabled={this.state.lampStatus || this.state.waiting}
+              style={styles.onbuttonbg}
+              textStyle={styles.onbutton}
+              isDisabled={this.state.lampStatus || this.state.waiting}
               onPress={() => this.onSwitch(true)}
             >
               ON
             </Button>
             <Button
-              style={styles.offbutton}
-              styleDisabled={styles.disablebutton}
-              disabled={!this.state.lampStatus || this.state.waiting}
+              style={styles.offbuttonbg}
+              textStyle={styles.offbutton}
+              isDisabled={!this.state.lampStatus || this.state.waiting}
               onPress={() => this.onSwitch(false)}
             >
               OFF
@@ -159,28 +160,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10
   },
-  onbutton: {
-    borderRadius:10,
+  onbuttonbg: {
+    borderRadius: 10,
     backgroundColor: '#66cdaa',
-    width: 120,
-    paddingTop: 15,
-    paddingBottom: 15,
+    borderColor: '#3d7b66',
+    borderWidth: 2,
+    height: 80,
+  },
+  onbutton: {
     fontSize: 40,
     color: '#3d7b66',
-    marginBottom: 5,
+  },
+  offbuttonbg: {
+    borderRadius: 10,
+    backgroundColor: '#ff9892',
+    borderColor: '#995b57',
+    borderWidth: 2,
+    height: 80,
   },
   offbutton: {
-    borderRadius:10,
-    backgroundColor: '#ff9892',
-    width: 120,
-    paddingTop: 15,
-    paddingBottom: 15,
     fontSize: 40,
     color: '#995b57',
-  },
-  disablebutton: {
-    backgroundColor: '#b2b2b2',
-    color: '#6a6a6a',
   },
 });
 
