@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Button from 'react-native-button';
+import config from './config';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -15,13 +16,44 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      waiting: false,
       lampStatus: false,
+      topic: 'farm/led',
     }
+
+    this.onSwitch = this.onSwitch.bind(this);
+  }
+
+  onSwitch(lampStatus) {
+    const topic = this.state.topic;
+    const auth = `/${topic}?auth=${config.appKey}:${config.appSecret}`
+    const url = `https://api.netpie.io/topic/${config.appId}${auth}`;
+
+    const reqOpts = {
+        method: 'PUT',
+        body: lampStatus ? 'ON' : 'OFF',
+    };
+
+    this.setState({ waiting: true });
+
+    fetch(url, reqOpts)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if (responseJson.code == 200) {
+          this.setState({ lampStatus, waiting: false })
+        } else {
+          alert(responseJson.message);
+          this.setState({ waiting: false })
+        }
+      })
+      .catch((error) => {
+        alert('Something wrong!!');
+        this.setState({ waiting: false })
+      });
   }
 
   render() {
     const lampSource = this.state.lampStatus ? require('./image/on.png') : require('./image/off.png');
-
 
     return (
       <View style={styles.container}>
@@ -34,11 +66,13 @@ class App extends Component {
         </View>
         <View style={styles.body}>
           <Text style={styles.welcome}>
-            Microgear Alias
+            Topic
           </Text>
           <TextInput
             style={ styles.aliastext }
-            placeholder="microgear alias"
+            placeholder="topic"
+            value={this.state.topic}
+            onChangeText={(topic) => this.setState({topic})}
           />
         </View>
         <View style={styles.footer}>
@@ -65,23 +99,20 @@ class App extends Component {
             <Button
               style={styles.onbutton}
               styleDisabled={styles.disablebutton}
-              disabled={this.state.lampStatus}
-              onPress={() => this.setState({lampStatus: true})}
+              disabled={this.state.lampStatus || this.state.waiting}
+              onPress={() => this.onSwitch(true)}
             >
               ON
             </Button>
             <Button
               style={styles.offbutton}
               styleDisabled={styles.disablebutton}
-              disabled={!this.state.lampStatus}
-              onPress={() => this.setState({lampStatus: false})}
+              disabled={!this.state.lampStatus || this.state.waiting}
+              onPress={() => this.onSwitch(false)}
             >
               OFF
             </Button>
           </View>
-        </View>
-        <View style={{ height: 50 }}>
-          <Text>todo: connect to netpie</Text>
         </View>
       </View>
     );
@@ -97,22 +128,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // backgroundColor: 'red',
   },
   body: {
     flex: 2,
     justifyContent: 'center',
     alignItems: 'stretch',
     padding: 20,
-
-    // backgroundColor: 'green',
   },
   footer: {
     flex: 3,
     flexDirection: 'row',
   },
   welcome: {
-    fontSize: 20,
+    fontSize: 25,
     textAlign: 'center',
     margin: 10,
   },
