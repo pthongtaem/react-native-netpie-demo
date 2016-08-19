@@ -18,16 +18,44 @@ class App extends Component {
     this.state = {
       waiting: false,
       lampStatus: false,
-      topic: 'farm/led',
     }
 
     this.onSwitch = this.onSwitch.bind(this);
   }
 
+  componentDidMount() {
+    this.setState({ waiting: true });
+    this.getCurrentStatus();
+    setInterval(() => {
+      this.getCurrentStatus();
+    },1500);
+  }
+
+  getCurrentStatus() {
+    const topic = config.topic;
+    const auth = `${topic}?auth=${config.appKey}:${config.appSecret}&retain`
+    const url = `https://api.netpie.io/topic/${config.appId}/${auth}`;
+
+    fetch(url)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      if (responseJson.length === 1) {
+        const lampStatus = responseJson[0].payload === 'ON' ? true : false;
+
+        this.setState({
+          lampStatus,
+          waiting: false,
+        });
+      } else {
+        this.setState({ waiting: false });
+      }
+    });
+  }
+
   onSwitch(lampStatus) {
-    const topic = this.state.topic;
-    const auth = `/${topic}?auth=${config.appKey}:${config.appSecret}`
-    const url = `https://api.netpie.io/topic/${config.appId}${auth}`;
+    const topic = config.topic;
+    const auth = `${topic}?auth=${config.appKey}:${config.appSecret}&retain`
+    const url = `https://api.netpie.io/topic/${config.appId}/${auth}`;
 
     const reqOpts = {
         method: 'PUT',
@@ -37,19 +65,19 @@ class App extends Component {
     this.setState({ waiting: true });
 
     fetch(url, reqOpts)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        if (responseJson.code == 200) {
-          this.setState({ lampStatus, waiting: false })
-        } else {
-          alert(responseJson.message);
-          this.setState({ waiting: false })
-        }
-      })
-      .catch((error) => {
-        alert('Something wrong!!');
-        this.setState({ waiting: false })
-      });
+    .then((response) => response.json())
+    .then((responseJson) => {
+      if (responseJson.code == 200) {
+        this.setState({ lampStatus, waiting: false });
+      } else {
+        alert(responseJson.message);
+        this.setState({ waiting: false });
+      }
+    })
+    .catch((error) => {
+      alert('Something wrong!!');
+      this.setState({ waiting: false });
+    });
   }
 
   render() {
@@ -62,17 +90,6 @@ class App extends Component {
             style={styles.logo}
             source={require('./image/netpie_logo.png')}
             resizeMode="contain"
-          />
-        </View>
-        <View style={styles.body}>
-          <Text style={styles.welcome}>
-            Topic
-          </Text>
-          <TextInput
-            style={ styles.aliastext }
-            placeholder="topic"
-            value={this.state.topic}
-            onChangeText={(topic) => this.setState({topic})}
           />
         </View>
         <View style={styles.footer}>
